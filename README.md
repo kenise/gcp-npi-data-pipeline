@@ -44,7 +44,7 @@ gcloud auth application-default login
 ```bash
 python npi_pipeline.py \
   --mode monthly \
-  --source-url "https://example.com/nppes_full_2026_05.zip" \
+  --source-url "https://download.cms.gov/nppes/NPPES_Data_Dissemination_202605.zip" \
   --gcs-bucket my-bucket \
   --bq-project my-project \
   --bq-dataset my_dataset
@@ -55,11 +55,19 @@ python npi_pipeline.py \
 ```bash
 python npi_pipeline.py \
   --mode weekly \
-  --source-url "https://example.com/nppes_weekly_2026-05-01.zip" \
+  --source-url "https://download.cms.gov/nppes/NPPES_NPI_Weekly_2026-05-01.zip" \
   --gcs-bucket my-bucket \
   --bq-project my-project \
   --bq-dataset my_dataset
 ```
+
+## CMS NPPES Data Source
+- **Official source**: https://download.cms.gov/nppes/NPI_Files.html
+- **Monthly full replacement files**: `NPPES_Data_Dissemination_YYYYMM.zip`
+- **Weekly incremental files**: `NPPES_NPI_Weekly_YYYY-MM-DD.zip`
+- **Recommended version**: NPPES Version 2 (Version 1 support ended March 3, 2026)
+
+Download the monthly file at the start of each month and merge weekly incrementals throughout the month.
 
 ## Notes
 - CMS documentation recommends reloading the monthly full file each month.
@@ -108,11 +116,11 @@ Example:
 ```bash
 curl -X POST "https://<SERVICE_URL>/run" \
   -H "Content-Type: application/json" \
-  -d '{"mode":"monthly","source_url":"https://example.com/nppes_full_2026_05.zip"}'
+  -d '{"mode":"monthly","source_url":"https://download.cms.gov/nppes/NPPES_Data_Dissemination_202605.zip"}'
 ```
 
 ### Cloud Scheduler example
-Create a scheduler job for monthly full refresh:
+Create a scheduler job for monthly full refresh (runs on the 1st of each month at 04:00 UTC):
 
 ```bash
 gcloud scheduler jobs create http npi-monthly-full \
@@ -121,10 +129,10 @@ gcloud scheduler jobs create http npi-monthly-full \
   --http-method=POST \
   --headers="Content-Type=application/json" \
   --time-zone="UTC" \
-  --message-body='{"mode":"monthly","source_url":"https://example.com/nppes_full_2026_05.zip"}'
+  --message-body='{"mode":"monthly","source_url":"https://download.cms.gov/nppes/NPPES_Data_Dissemination_202605.zip"}'
 ```
 
-Create a scheduler job for weekly incremental merge:
+Create a scheduler job for weekly incremental merge (runs every Monday at 04:00 UTC):
 
 ```bash
 gcloud scheduler jobs create http npi-weekly-incremental \
@@ -133,7 +141,7 @@ gcloud scheduler jobs create http npi-weekly-incremental \
   --http-method=POST \
   --headers="Content-Type=application/json" \
   --time-zone="UTC" \
-  --message-body='{"mode":"weekly","source_url":"https://example.com/nppes_weekly_2026-05-01.zip"}'
+  --message-body='{"mode":"weekly","source_url":"https://download.cms.gov/nppes/NPPES_NPI_Weekly_2026-05-01.zip"}'
 ```
 
-Make sure the Cloud Run service has a service account with access to BigQuery and Cloud Storage.
+**Note:** Update the source URLs in the scheduler payloads to match the current month's and week's CMS file names. Ensure the Cloud Run service has a service account with access to BigQuery and Cloud Storage.
