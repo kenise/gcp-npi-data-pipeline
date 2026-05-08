@@ -77,3 +77,63 @@ The script accepts environment variables as fallbacks:
 - Add scheduler automation (Cloud Scheduler + Cloud Functions / Cloud Run).
 - Add validation for schema drift and file freshness.
 - Add incremental state tracking and run metadata logging.
+
+## Cloud Run deployment scaffold
+This repository now includes a Cloud Run deployment scaffold.
+
+Files added:
+- `Dockerfile` — builds a container image for Cloud Run.
+- `main.py` — Flask-based HTTP entrypoint for triggering the pipeline.
+- `cloudbuild.yaml` — Cloud Build configuration for building and publishing the image.
+
+### Deploy to Cloud Run
+```bash
+gcloud builds submit --config cloudbuild.yaml --substitutions=_GCR_IMAGE="gcr.io/$GOOGLE_CLOUD_PROJECT/gcp-npi-data-pipeline"
+```
+Then deploy the container:
+
+```bash
+gcloud run deploy gcp-npi-data-pipeline \
+  --image gcr.io/$GOOGLE_CLOUD_PROJECT/gcp-npi-data-pipeline:$SHORT_SHA \
+  --region us-central1 \
+  --platform managed \
+  --allow-unauthenticated \
+  --set-env-vars BQ_PROJECT=your-project,BQ_DATASET=your_dataset,GCS_BUCKET=your-bucket
+```
+
+### Cloud Run trigger
+The service exposes `/run`.
+Example:
+
+```bash
+curl -X POST "https://<SERVICE_URL>/run" \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"monthly","source_url":"https://example.com/nppes_full_2026_05.zip"}'
+```
+
+### Cloud Scheduler example
+Create a scheduler job for monthly full refresh:
+
+```bash
+gcloud scheduler jobs create http npi-monthly-full \
+  --schedule="0 4 1 * *" \
+  --uri="https://<SERVICE_URL>/run" \
+  --http-method=POST \
+  --headers="Content-Type=application/json" \
+  --time-zone="UTC" \
+  --message-body='{"mode":"monthly","source_url":"https://example.com/nppes_full_2026_05.zip"}'
+```
+
+Create a scheduler job for weekly incremental merge:
+
+```bash
+gcloud scheduler jobs create http npi-weekly-incremental \
+  --schedule="0 4 * * 1" \
+  --uri="https://<SERVICE_URL>/run" \
+  --http-method=POST \
+  --headers="Content-Type=application/json" \
+  --time-zone="UTC" \
+  --message-body='{"mode":"weekly","source_url":"https://example.com/nppes_weekly_2026-05-01.zip"}'
+```
+
+Make sure the Cloud Run service has a service account with access to BigQuery and Cloud Storage.
