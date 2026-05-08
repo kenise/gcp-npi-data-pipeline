@@ -47,7 +47,7 @@ python npi_pipeline.py \
   --source-url "https://download.cms.gov/nppes/NPPES_Data_Dissemination_202605.zip" \
   --gcs-bucket my-bucket \
   --bq-project my-project \
-  --bq-dataset my_dataset
+  --bq-dataset cms_npi_sync
 ```
 
 4. Run a weekly incremental load:
@@ -58,7 +58,7 @@ python npi_pipeline.py \
   --source-url "https://download.cms.gov/nppes/NPPES_NPI_Weekly_2026-05-01.zip" \
   --gcs-bucket my-bucket \
   --bq-project my-project \
-  --bq-dataset my_dataset
+  --bq-dataset cms_npi_sync
 ```
 
 ## CMS NPPES Data Source
@@ -106,7 +106,7 @@ gcloud run deploy gcp-npi-data-pipeline \
   --region us-east4 \
   --platform managed \
   --allow-unauthenticated \
-  --set-env-vars BQ_PROJECT=your-project,BQ_DATASET=your_dataset,GCS_BUCKET=your-bucket
+  --set-env-vars BQ_PROJECT=your-project,BQ_DATASET=cms_npi_sync,GCS_BUCKET=your-bucket
 ```
 
 ### Cloud Run trigger
