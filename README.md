@@ -103,7 +103,7 @@ Then deploy the container:
 ```bash
 gcloud run deploy gcp-npi-data-pipeline \
   --image gcr.io/$GOOGLE_CLOUD_PROJECT/gcp-npi-data-pipeline:$SHORT_SHA \
-  --region us-central1 \
+  --region us-east4 \
   --platform managed \
   --allow-unauthenticated \
   --set-env-vars BQ_PROJECT=your-project,BQ_DATASET=your_dataset,GCS_BUCKET=your-bucket
